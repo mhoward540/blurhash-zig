@@ -13,7 +13,7 @@ This code targets Zig 0.9.1 which is the latest stable release as of the code be
 zig build run -- /path/to/image
 ```
 
-## Using as a library
+## Using as a library (not functioning - WIP)
 Clone down the repo as a submodule of your project. Then add the package path `blurhash-zig` to your `build.zig` like so:
 ```zig
 exe.addPackagePath("blurhash", "blurhash-zig/src/blurhash.zig");
