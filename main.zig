@@ -34,7 +34,7 @@ test "encoding - components = 4" {
     var img = try zigimg.Image.fromFilePath(allocator, "./image.png");
     defer img.deinit();
 
-    const blurhashStr = (try blurhash.encode(&allocator, img, 4, 4)) orelse unreachable;
+    const blurhashStr = try blurhash.encode(&allocator, img, 4, 4);
     try std.testing.expectEqualSlices(u8, blurhashStr, "UrQ]$mfQ~qj@ocofWFWB?bj[D%azf6WBj[t7"[0..36]);
 }
 
@@ -45,6 +45,6 @@ test "encoding - components = 1" {
     var img = try zigimg.Image.fromFilePath(allocator, "./image.png");
     defer img.deinit();
 
-    const blurhashStr = (try blurhash.encode(&allocator, img, 1, 1)) orelse unreachable;
+    const blurhashStr = try blurhash.encode(&allocator, img, 1, 1);
     try std.testing.expectEqualSlices(u8, blurhashStr, "00Q]$m"[0..6]);
 }
