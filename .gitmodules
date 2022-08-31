@@ -1,0 +1,6 @@
+[submodule "zigimg"]
+	path = zigimg
+	url = https://github.com/zigimg/zigimg.git
+[submodule "zig-string"]
+	path = zig-string
+	url = https://github.com/JakubSzark/zig-string.git
