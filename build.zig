@@ -1,5 +1,6 @@
 const build_mod = @import("std").build;
 const Builder = build_mod.Builder;
+const pkgs = @import("deps.zig").pkgs;
 
 pub fn build(b: *Builder) void {
     const target = b.standardTargetOptions(.{});
@@ -9,15 +10,13 @@ pub fn build(b: *Builder) void {
     const exe = b.addExecutable("blurhash-zig", "./main.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
-    exe.addPackagePath("zigimg", "zigimg/zigimg.zig");
-    exe.addPackagePath("zig-string", "zig-string/zig-string.zig");
+    pkgs.addAllTo(exe);
     exe.install();
 
     const test_step = b.step("test", "Run library tests");
     {
         const test_suite = b.addTest("./main.zig");
-        test_suite.addPackagePath("zigimg", "zigimg/zigimg.zig");
-        test_suite.addPackagePath("zig-string", "zig-string/zig-string.zig");
+        pkgs.addAllTo(test_suite);
         test_suite.step.dependOn(&exe.step);
 
         test_step.dependOn(&test_suite.step);

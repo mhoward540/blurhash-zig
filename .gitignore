@@ -1,7 +1,13 @@
-# Created by https://www.toptal.com/developers/gitignore/api/emacs,intellij+all,zig,visualstudiocode,vim
-# Edit at https://www.toptal.com/developers/gitignore?templates=emacs,intellij+all,zig,visualstudiocode,vim
 
 qoi_test_images
+
+# gyro package manager stuff
+gyro.lock
+.gyro/*
+deps.zig
+
+# Created by https://www.toptal.com/developers/gitignore/api/emacs,intellij+all,zig,visualstudiocode,vim
+# Edit at https://www.toptal.com/developers/gitignore?templates=emacs,intellij+all,zig,visualstudiocode,vim
 
 ### Emacs ###
 # -*- mode: gitignore; -*-
