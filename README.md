@@ -1,7 +1,7 @@
 # blurhash-zig
 Implementation of [BlurHash](https://github.com/woltapp/blurhash) algorithm in [Zig](https://ziglang.org/). For now it only supports encoding an image as a Hash
 
-The [Nim implmentation](https://github.com/SolitudeSF/blurhash) of BlurHash was used heavliy as a reference for this code
+The [Nim implementation](https://github.com/SolitudeSF/blurhash) of BlurHash was used heavliy as a reference for this code
 
 I also used [Zig Image Library](https://github.com/zigimg/zigimg) (aka zigimg) and [Zig String](https://github.com/JakubSzark/zig-string) as dependencies to make my life a lot easier. Dependency management is handled with the unofficial package manager [gyro](https://github.com/mattnite/gyro)
 
