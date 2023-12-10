@@ -1,8 +1,7 @@
 const std = @import("std");
 const math = std.math;
-const base83 = @import("./base83.zig");
+const base83 = @import("base83.zig");
 const zigimg = @import("zigimg");
-const String = @import("zig-string").String;
 
 
 fn toXYZ(n: f64) f64 {
@@ -15,7 +14,7 @@ fn toXYZ(n: f64) f64 {
 
 fn signPow(a: f64, b: f64) f64 {
     if (a < 0.0) {
-        return math.pow(f64, @fabs(a), b) * -1;
+        return math.pow(f64, @abs(a), b) * -1;
     } else {
         return math.pow(f64, a, b);
     }
@@ -24,120 +23,121 @@ fn signPow(a: f64, b: f64) f64 {
 fn toUintSrgb(n: f64) u8 {
     const v = math.clamp(n, 0.0, 1.0);
     if (v <= 0.0031308) {
-        return @floatToInt(u8, v * 12.92 * 255.0 + 0.5);
+        return @intFromFloat(v * 12.92 * 255.0 + 0.5);
     } else {
-        return @floatToInt(u8, (math.pow(f64, v, 1.0 / 2.4) * 1.055 - 0.055) * 255.0 + 0.5);
+        return @intFromFloat((math.pow(f64, v, 1.0 / 2.4) * 1.055 - 0.055) * 255.0 + 0.5);
     }
 }
 
-pub fn encode(allocator_ref: *std.mem.Allocator, img: zigimg.Image, componentsX: u8, componentsY: u8) ![]u8 {
-    if (componentsX > 9 or componentsX < 1 or componentsY > 9 or componentsY < 1) {
+pub fn encode(allocator: std.mem.Allocator, img: zigimg.Image, components_x: u8, components_y: u8) ![]const u8 {
+    if (components_x > 9 or components_x < 1 or components_y > 9 or components_y < 1) {
         return error.BlurhashError;
     }
 
-    var allocator = allocator_ref.*;
-
-    // kinda lame - copying the image into an array that we can index into to more easily follow the algorithm
-    var pixels = try allocator.alloc(zigimg.color.Colorf32, img.width * img.height);
-    defer allocator.free(pixels);
-
     var iterator = img.iterator();
-    var index: usize = 0;
-    var foundAlpha = false;
-    while (iterator.next()) |pixel| {
-        pixels[index] = pixel;
-        // check if the image has an alpha component. This can be done with PixelFormat, but
-        // some rgb images are encoded as rgba with alpha at max (1.0 in this case)
-        foundAlpha = foundAlpha or (pixel.a != 1.0);
-        index += 1;
-    }
 
-    if (foundAlpha) {
-        return error.UnsupportedPixelFormat;
-    }
+    const buf = try allocator.alloc(u8, 2 * components_x * components_y + 4);
+    defer allocator.free(buf);
 
-    var result = String.init(allocator_ref);
-    defer result.deinit();
+    var buf_stream = std.io.fixedBufferStream(buf);
+    var result = buf_stream.writer();
 
-    var comps = try allocator.alloc([3]f64, componentsX * componentsY);
+    var comps = try allocator.alloc([3]f64, components_x * components_y);
     defer allocator.free(comps);
 
-    const l = @intToFloat(f64, pixels.len);
-    var j: u8 = 0;
-    var maxComponent: f64 = 0.0;
-    while (j < componentsY) : (j += 1) {
-        var i: u8 = 0;
-        while (i < componentsX) : (i += 1) {
-            const normFactor: f64 = if (j == 0 and i == 0) 1.0 else 2.0;
-            // represents r, g, b
-            var comp = [_]f64{ 0.0, 0.0, 0.0 };
+    const l: f64 = @floatFromInt(img.width * img.height);
+    var max_component: f64 = 0.0;
 
-            var y: usize = 0;
-            while (y < img.height) : (y += 1) {
-                const yw: usize = y * img.width;
+    var x: usize = 0;
+    var y: usize = 0;
 
-                var x: usize = 0;
-                while (x < img.width) : (x += 1) {
-                    const basis: f64 = normFactor *
-                        @cos(math.pi * @intToFloat(f64, i) * @intToFloat(f64, x) / @intToFloat(f64, img.width)) *
-                        @cos(math.pi * @intToFloat(f64, j) * @intToFloat(f64, y) / @intToFloat(f64, img.height));
+    const f_width: f64 = @floatFromInt(img.width);
+    const f_height: f64 = @floatFromInt(img.height);
 
-                    // TODO handle rgba by normalizing the rgba values to rgb
-                    comp[0] += basis * toXYZ(pixels[x + yw].r);
-                    comp[1] += basis * toXYZ(pixels[x + yw].g);
-                    comp[2] += basis * toXYZ(pixels[x + yw].b);
-                }
+    while (iterator.next()) |pixel| {
+        if (pixel.a != 1.0) {
+            return error.UnsupportedPixelFormat;
+        }
+
+        var comp_idx: usize = 0;
+        var norm_factor: f64 = 1.0;
+        for (0..components_y) |j| {
+            for (0..components_x) |i| {
+                const basis: f64 = norm_factor *
+                    @cos(math.pi * @as(f64, @floatFromInt(i * x)) / f_width) *
+                    @cos(math.pi * @as(f64, @floatFromInt(j * y)) / f_height);
+
+                // TODO handle rgba by normalizing the rgba values to rgb
+                comps[comp_idx][0] += basis * toXYZ(pixel.r);
+                comps[comp_idx][1] += basis * toXYZ(pixel.g);
+                comps[comp_idx][2] += basis * toXYZ(pixel.b);
+
+                comp_idx += 1;
+                norm_factor = 2.0;
             }
+        }
 
-            comp[0] /= l;
-            comp[1] /= l;
-            comp[2] /= l;
-            comps[j * componentsX + i] = comp;
-
-            if (!(i == 0 and j == 0)) {
-                maxComponent = math.max(maxComponent, math.max3(
-                    @fabs(comp[0]),
-                    @fabs(comp[1]),
-                    @fabs(comp[2]),
-                ));
-            }
+        x = (x + 1) % img.width;
+        if (x == 0) {
+            y += 1;
         }
     }
 
-    const dcValue: u32 =
+    for (0..comps.len) |comp_idx| {
+        comps[comp_idx][0] /= l;
+        comps[comp_idx][1] /= l;
+        comps[comp_idx][2] /= l;
+
+
+        if (comp_idx != 0) {
+            max_component = @max(max_component, @max(
+                @abs(comps[comp_idx][0]),
+                @max(
+                    @abs(comps[comp_idx][1]),
+                    @abs(comps[comp_idx][2]),
+                )
+            ));
+        }
+    }
+
+    const dc_value: u32 =
         @shlExact(@as(u32, toUintSrgb(comps[0][0])), 16) |
         @shlExact(@as(u32, toUintSrgb(comps[0][1])), 8) |
         @as(u32, toUintSrgb(comps[0][2]));
 
-    const quantMaxValue: u32 = @floatToInt(u32, math.max(0, math.min(82, @floor(maxComponent * 166 - 0.5))));
-    var normMaxValue: f64 = 0.0;
+    const quant_max_value: u32 = @intFromFloat(@max(0, @min(82, @floor(max_component * 166 - 0.5))));
+    var norm_max_value: f64 = 0.0;
 
-    try result.concat(try base83.encode(allocator_ref, componentsX - 1 + (componentsY - 1) * 9, 1));
+    try result.writeByte(base83.encodeByte(components_x - 1 + (components_y - 1) * 9));
 
     if (comps.len > 1) {
-        normMaxValue = @intToFloat(f64, quantMaxValue + 1) / 166.0;
-        try result.concat(try base83.encode(allocator_ref, quantMaxValue, 1));
+        norm_max_value = @as(f64, @floatFromInt(quant_max_value + 1)) / 166.0;
+        try result.writeByte(base83.encodeByte(quant_max_value));
     } else {
-        normMaxValue = 1.0;
-        try result.concat(try base83.encode(allocator_ref, 0, 1));
+        norm_max_value = 1.0;
+        try result.writeByte(base83.encodeByte(0));
     }
 
-    try result.concat(try base83.encode(allocator_ref, dcValue, 4));
+    var enc_buf:[4]u8 = undefined;
+    _ = try result.write(try base83.encode(&enc_buf, dc_value, 4));
 
-    var i: u64 = 1;
-    while (i < comps.len) : (i += 1) {
-        try result.concat(
+    for (1..comps.len) |k| {
+        const comp_r: u32 = @intFromFloat(@max(0, @min(18, @floor(signPow(comps[k][0] / norm_max_value, 0.5) * 9 + 9.5))));
+        const comp_g: u32 = @intFromFloat(@max(0, @min(18, @floor(signPow(comps[k][1] / norm_max_value, 0.5) * 9 + 9.5))));
+        const comp_b: u32 = @intFromFloat(@max(0, @min(18, @floor(signPow(comps[k][2] / norm_max_value, 0.5) * 9 + 9.5))));
+
+        _ = try result.write(
             try base83.encode(
-                allocator_ref,
-                (
-                    (@floatToInt(u32, math.max(0, math.min(18, @floor(signPow(comps[i][0] / normMaxValue, 0.5) * 9 + 9.5)))) * 19 * 19) +
-                    (@floatToInt(u32, math.max(0, math.min(18, @floor(signPow(comps[i][1] / normMaxValue, 0.5) * 9 + 9.5)))) * 19) +
-                    @floatToInt(u32, math.max(0, math.min(18, @floor(signPow(comps[i][2] / normMaxValue, 0.5) * 9 + 9.5))))
-                ),
+                &enc_buf,
+                (comp_r * 19 * 19) + (comp_g * 19) + comp_b,
                 2
             )
         );
     }
 
-    return (try result.toOwned()) orelse "";
+    const written = buf_stream.getWritten();
+    const str = try allocator.alloc(u8, written.len);
+    @memcpy(str, written);
+
+    return str;
 }
