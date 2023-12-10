@@ -1,6 +1,7 @@
 .{
 	.name = "blurhash-zig",
-	.version = "0.0.1",
+	.version = "0.1.0",
+	.minimum_zig_version = "0.12.0",
 
 	.dependencies = .{
 		.zigimg = .{
@@ -8,5 +9,11 @@
       .hash = "1220a3884127fc725c4063ab6865a345066c933b8f5c792df00f8291d2f5f6a9eb9e"
     },
 	},
-	.paths = .{""}
+	.paths = .{
+    "LICENSE",
+    "README.md",
+    "build.zig",
+    "main.zig",
+    "src"		
+	}
 }

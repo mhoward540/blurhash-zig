@@ -3,12 +3,25 @@ const math = std.math;
 const base83 = @import("base83.zig");
 const zigimg = @import("zigimg");
 
+const TABLE_SIZE = 1024;
+
+const pow_table = struct{
+    pub fn createTable(comptime n: comptime_int) [n]f64 {
+        @setEvalBranchQuota(TABLE_SIZE * 1000);
+        const f_size: f64 = @floatFromInt(TABLE_SIZE);
+        var table: [n]f64 = undefined;
+        for (0..n) |i| {
+            table[i] = math.pow(f64, (@as(f64, @floatFromInt(i)) / f_size + 0.055) / 1.055, 2.4);
+        }
+        return table;
+    }
+}.createTable(TABLE_SIZE + 1);
 
 fn toXYZ(n: f64) f64 {
     if (n <= 0.04045) {
         return n / 12.92;
     } else {
-        return math.pow(f64, (n + 0.055) / 1.055, 2.4);
+        return pow_table[@intFromFloat(n * TABLE_SIZE)];
     }
 }
 
@@ -54,6 +67,19 @@ pub fn encode(allocator: std.mem.Allocator, img: zigimg.Image, components_x: u8,
     const f_width: f64 = @floatFromInt(img.width);
     const f_height: f64 = @floatFromInt(img.height);
 
+    const cos_table_x = try allocator.alloc(f64, img.width * components_x);
+    const cos_table_y = try allocator.alloc(f64, img.height * components_y);
+    defer allocator.free(cos_table_x);
+    defer allocator.free(cos_table_y);
+
+    for (0..(img.width * components_x)) |i| {
+        cos_table_x[i] = @cos(math.pi * @as(f64, @floatFromInt(i)) / f_width);
+    }
+
+    for (0..(img.height * components_y)) |i| {
+        cos_table_y[i] = @cos(math.pi * @as(f64, @floatFromInt(i)) / f_height);
+    }
+
     while (iterator.next()) |pixel| {
         if (pixel.a != 1.0) {
             return error.UnsupportedPixelFormat;
@@ -63,9 +89,7 @@ pub fn encode(allocator: std.mem.Allocator, img: zigimg.Image, components_x: u8,
         var norm_factor: f64 = 1.0;
         for (0..components_y) |j| {
             for (0..components_x) |i| {
-                const basis: f64 = norm_factor *
-                    @cos(math.pi * @as(f64, @floatFromInt(i * x)) / f_width) *
-                    @cos(math.pi * @as(f64, @floatFromInt(j * y)) / f_height);
+                const basis: f64 = norm_factor * cos_table_x[i * x] * cos_table_y[j * y];
 
                 // TODO handle rgba by normalizing the rgba values to rgb
                 comps[comp_idx][0] += basis * toXYZ(pixel.r);
