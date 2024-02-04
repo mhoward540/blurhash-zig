@@ -1,31 +1,41 @@
-const build_mod = @import("std").build;
-const Builder = build_mod.Builder;
-const pkgs = @import("deps.zig").pkgs;
+const std = @import("std");
 
-pub fn build(b: *Builder) void {
+pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
 
-    const mode = b.standardReleaseOptions();
+    const exe = b.addExecutable(.{
+        .name = "blurhash-zig",
+        .root_source_file = .{ .path = "main.zig" },
+        .target = target,
+        .optimize = optimize,
+    });
+    b.installArtifact(exe);
+    const zigimg = b.dependency("zigimg", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    exe.root_module.addImport("zigimg", zigimg.module("zigimg"));
 
-    const exe = b.addExecutable("blurhash-zig", "./main.zig");
-    exe.setTarget(target);
-    exe.setBuildMode(mode);
-    pkgs.addAllTo(exe);
-    exe.install();
+    const run_cmd = b.addRunArtifact(exe);
 
-    const test_step = b.step("test", "Run library tests");
-    {
-        const test_suite = b.addTest("./main.zig");
-        pkgs.addAllTo(test_suite);
-        test_suite.step.dependOn(&exe.step);
-
-        test_step.dependOn(&test_suite.step);
-    }
-
-    const run_cmd = exe.run();
-    if (b.args) |args| { run_cmd.addArgs(args); }
     run_cmd.step.dependOn(b.getInstallStep());
+
+    if (b.args) |args| {
+        run_cmd.addArgs(args);
+    }
 
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
+
+    const unit_tests = b.addTest(.{
+        .root_source_file = .{ .path = "main.zig" },
+        .target = target,
+        .optimize = optimize,
+    });
+    unit_tests.root_module.addImport("zigimg", zigimg.module("zigimg"));
+
+    const run_unit_tests = b.addRunArtifact(unit_tests);
+    const test_step = b.step("test", "Run unit tests");
+    test_step.dependOn(&run_unit_tests.step);
 }
