@@ -15,7 +15,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    exe.addModule("zigimg", zigimg.module("zigimg"));
+    exe.root_module.addImport("zigimg", zigimg.module("zigimg"));
 
     const run_cmd = b.addRunArtifact(exe);
 
@@ -33,7 +33,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    unit_tests.addModule("zigimg", zigimg.module("zigimg"));
+    unit_tests.root_module.addImport("zigimg", zigimg.module("zigimg"));
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
     const test_step = b.step("test", "Run unit tests");
