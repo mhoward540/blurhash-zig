@@ -1,19 +1,12 @@
-.{
-    .name = "blurhash-zig",
-    .version = "0.1.0",
-    .minimum_zig_version = "0.12.0-dev.2546+f2e249e92",
-
-    .dependencies = .{
-        .zigimg = .{
-            .url = "https://github.com/zigimg/zigimg/archive/61862e6a37e70551cccd4113bf987eaf93b67601.tar.gz",
-            .hash = "1220a1ac633472925863401189e4de1cbf441736dd100c17c19a837ee0f31632d647",
-        },
+.{ .name = "blurhash-zig", .version = "0.2.0", .minimum_zig_version = "0.12.0", .dependencies = .{
+    .zigimg = .{
+        .url = "https://github.com/zigimg/zigimg/archive/637974e2d31dcdbc33f1e9cc8ffb2e46abd2e215.tar.gz",
+        .hash = "122012026c3a65ff1d4acba3b3fe80785f7cee9c6b4cdaff7ed0fbf23b0a6c803989",
     },
-    .paths = .{
-        "LICENSE",
-        "README.md",
-        "build.zig",
-        "main.zig",
-        "src",
-    }
-}
+}, .paths = .{
+    "LICENSE",
+    "README.md",
+    "build.zig",
+    "main.zig",
+    "src",
+} }
