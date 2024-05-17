@@ -32,3 +32,6 @@ zig build test
 
 # Image format support
 It can read all file formats supported by zigimg, though I've only tested and confirmed PNG and QOI images as working. This implmentation does not handle Alpha values / transparency, so it will return an error when encountering an image which has any transparency. 
+
+# Acknolwedgements
+Thanks to [alexkuz](https://github.com/alexkuz) for updating this repo to work with Zig 0.12.0 and for heavy performance optimizations!
