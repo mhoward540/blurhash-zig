@@ -3,26 +3,20 @@ Implementation of [BlurHash](https://github.com/woltapp/blurhash) algorithm in [
 
 The [Nim implementation](https://github.com/SolitudeSF/blurhash) of BlurHash was used heavliy as a reference for this code
 
-I also used [Zig Image Library](https://github.com/zigimg/zigimg) (aka zigimg) and [Zig String](https://github.com/JakubSzark/zig-string) as dependencies to make my life a lot easier. Dependency management is handled with the unofficial package manager [gyro](https://github.com/mattnite/gyro)
+I also used [Zig Image Library](https://github.com/zigimg/zigimg) (aka zigimg) as a dependency to make my life a lot easier. Dependency management is handled with the official Zig package manager (see build.zig.zon)
 
 # Usage
-This code targets Zig 0.9.1 which is the latest stable release as of the code being written, so ensure that is installed before trying to run this.
+This code targets Zig 0.12.0 which is the latest stable release as of the code being written, so ensure that is installed before trying to run this.
 
-This also uses gyro to handle dependencies. As this code uses Zig 0.9.1, and the current release of gyro seemst to expect a build from the current master branch (higher than 0.10.0-dev), you need to install a compatible version of gyro. [0.4.1 worked for me](https://github.com/mattnite/gyro/releases/tag/0.4.1) 
-
-The dependency libraries are pinned to versions which work with Zig 0.9.1
+The dependency libraries are pinned to versions which work with Zig 0.12.0
 
 ## Running on the command line
 ```
-gyro build run -- /path/to/image
+zig build run -- /path/to/image
 ```
 
 ## Using as a library
-Init your gyro project and add this repo as a dependency. Ensure your `build.zig` uses the gyro generated `deps.zig`. You can check the `build.zig` from this repo as a reference to see what that might look like
-```bash
-gyro init
-gyro add --src github mhoward540/blurhash-zig
-```
+Add `blurhash-zig` to your `build.zig.zon` and into your build process from `build.zig`. As a reference, you can look at how this repo adds `zigimg` as a dependency
 
 Then import it in your code:
 ```zig
@@ -33,7 +27,7 @@ You need to pass an instance of a `zigimg.Image` to the blurhash `encode` functi
 
 ## Running tests
 ```
-gyro build test
+zig build test
 ```
 
 # Image format support
