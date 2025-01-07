@@ -1,4 +1,4 @@
-.{ .name = "blurhash-zig", .version = "0.2.0", .minimum_zig_version = "0.13.0", .dependencies = .{
+.{ .name = "blurhash-zig", .version = "0.3.0", .minimum_zig_version = "0.13.0", .dependencies = .{
     .zigimg = .{
         .url = "https://github.com/zigimg/zigimg/archive/cbb0c64caffd5b02863aadd62bab48cef7f86ceb.tar.gz",
         .hash = "1220c0980dc05816b12a8188546b4847bcf38e5e99defc0ea79a8d6bd4809049a029",
