@@ -6,9 +6,9 @@ The [Nim implementation](https://github.com/SolitudeSF/blurhash) of BlurHash was
 I also used [Zig Image Library](https://github.com/zigimg/zigimg) (aka zigimg) as a dependency to make my life a lot easier. Dependency management is handled with the official Zig package manager (see build.zig.zon)
 
 # Usage
-This code targets Zig 0.12.0 which is the latest stable release as of the code being written, so ensure that is installed before trying to run this.
+This code targets Zig 0.13.0 which is the latest stable release as of the code being written, so ensure that is installed before trying to run this.
 
-The dependency libraries are pinned to versions which work with Zig 0.12.0
+The dependency libraries are pinned to versions which work with Zig 0.13.0
 
 ## Running on the command line
 ```
